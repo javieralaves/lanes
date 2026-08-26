@@ -33,7 +33,11 @@ import {
   recipeEndTime,
   windowRemaining,
 } from "@/lib/game";
-import { DEMO_RECIPE } from "@/lib/recipe";
+import {
+  INITIATION_RECIPE,
+  LENTIL_CURRY,
+  RECIPES,
+} from "@/lib/recipe";
 import {
   LANE_META,
   LANE_ORDER,
@@ -43,6 +47,7 @@ import {
   type HitFlash,
   type HitJudgment,
   type LaneId,
+  type Recipe,
 } from "@/lib/types";
 
 function formatTime(sec: number): string {
@@ -62,14 +67,21 @@ function formatWindow(sec: number): string {
   return `${s}s`;
 }
 
+function recipeBlurb(recipe: Recipe): string {
+  const mins = Math.max(1, Math.round(recipe.durationSec / 60));
+  const steps = recipe.notes.length;
+  return `${steps} steps · ~${mins} min`;
+}
+
 export default function LanesGame() {
-  const recipe = DEMO_RECIPE;
+  const [recipe, setRecipe] = useState<Recipe>(INITIATION_RECIPE);
   const [phase, setPhase] = useState<GamePhase>("ready");
+  const [menuOpen, setMenuOpen] = useState(true);
   const [notes, setNotes] = useState<ActiveNote[]>(() =>
-    createActiveNotes(recipe),
+    createActiveNotes(INITIATION_RECIPE),
   );
   const [stats, setStats] = useState<GameStats>(() =>
-    emptyStats(recipe.notes.length),
+    emptyStats(INITIATION_RECIPE.notes.length),
   );
   const [now, setNow] = useState(0);
   const [flashes, setFlashes] = useState<HitFlash[]>([]);
@@ -83,6 +95,8 @@ export default function LanesGame() {
   const phaseRef = useRef(phase);
   const notesRef = useRef(notes);
   const statsRef = useRef(stats);
+  const recipeRef = useRef(recipe);
+  const menuOpenRef = useRef(menuOpen);
   const startWallRef = useRef(0);
   const rafRef = useRef(0);
   const bannerTimer = useRef<number | null>(null);
@@ -96,6 +110,12 @@ export default function LanesGame() {
   useEffect(() => {
     statsRef.current = stats;
   }, [stats]);
+  useEffect(() => {
+    recipeRef.current = recipe;
+  }, [recipe]);
+  useEffect(() => {
+    menuOpenRef.current = menuOpen;
+  }, [menuOpen]);
 
   const showJudgment = useCallback((judgment: HitJudgment, label?: string) => {
     const text =
@@ -209,37 +229,69 @@ export default function LanesGame() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [phase, recipe, pushFlash, showJudgment]);
 
-  const startGame = useCallback(() => {
-    const fresh = createActiveNotes(recipe);
-    const freshStats = emptyStats(recipe.notes.length);
+  const startRecipe = useCallback((next: Recipe) => {
+    const fresh = createActiveNotes(next);
+    const freshStats = emptyStats(next.notes.length);
+    recipeRef.current = next;
     notesRef.current = fresh;
     statsRef.current = freshStats;
+    setRecipe(next);
     setNotes(fresh);
     setStats(freshStats);
     setFlashes([]);
     setJudgmentBanner(null);
     setNow(0);
+    setMenuOpen(false);
+    menuOpenRef.current = false;
     startWallRef.current = performance.now();
     setPhase("playing");
     playStart();
-  }, [recipe]);
+  }, []);
+
+  const openMenu = useCallback(() => {
+    setMenuOpen(true);
+    setPhase("ready");
+    setNow(0);
+    setFlashes([]);
+    setJudgmentBanner(null);
+  }, []);
+
+  const replayCurrent = useCallback(() => {
+    startRecipe(recipeRef.current);
+  }, [startRecipe]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
 
-      if (phaseRef.current === "ready" && (key === " " || key === "enter")) {
-        e.preventDefault();
-        startGame();
-        return;
+      if (phaseRef.current === "ready" && menuOpenRef.current) {
+        if (key === "1" || key === " ") {
+          e.preventDefault();
+          startRecipe(INITIATION_RECIPE);
+          return;
+        }
+        if (key === "2" || key === "enter") {
+          e.preventDefault();
+          startRecipe(LENTIL_CURRY);
+          return;
+        }
       }
       if (
         phaseRef.current === "done" &&
         (key === " " || key === "enter" || key === "r")
       ) {
         e.preventDefault();
-        startGame();
+        if (recipeRef.current.id === INITIATION_RECIPE.id) {
+          startRecipe(LENTIL_CURRY);
+        } else {
+          replayCurrent();
+        }
+        return;
+      }
+      if (phaseRef.current === "done" && key === "m") {
+        e.preventDefault();
+        openMenu();
         return;
       }
       if (phaseRef.current !== "playing") return;
@@ -260,7 +312,7 @@ export default function LanesGame() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [attemptHit, startGame]);
+  }, [attemptHit, openMenu, replayCurrent, startRecipe]);
 
   const toggleSound = () => {
     const next = !soundOn;
@@ -271,6 +323,7 @@ export default function LanesGame() {
 
   const remaining = Math.max(0, recipe.durationSec - now);
   const visibleNotes = notes.filter((n) => isVisible(n, now));
+  const isInitiation = recipe.id === INITIATION_RECIPE.id;
 
   return (
     <div className="cabinet-shell">
@@ -324,12 +377,20 @@ export default function LanesGame() {
             </div>
           </header>
 
-          {phase === "ready" && (
-            <StartOverlay onStart={startGame} recipeTitle={recipe.title} />
+          {phase === "ready" && menuOpen && (
+            <MenuOverlay onPick={startRecipe} />
           )}
 
           {phase === "done" && (
-            <DoneOverlay stats={stats} onReplay={startGame} />
+            <DoneOverlay
+              stats={stats}
+              recipe={recipe}
+              isInitiation={isInitiation}
+              onReplay={replayCurrent}
+              onCookCurry={() => startRecipe(LENTIL_CURRY)}
+              onCookInitiation={() => startRecipe(INITIATION_RECIPE)}
+              onMenu={openMenu}
+            />
           )}
 
           <div className={`stage ${phase === "playing" ? "live" : "dimmed"}`}>
@@ -440,27 +501,42 @@ export default function LanesGame() {
   );
 }
 
-function StartOverlay({
-  onStart,
-  recipeTitle,
-}: {
-  onStart: () => void;
-  recipeTitle: string;
-}) {
+function MenuOverlay({ onPick }: { onPick: (recipe: Recipe) => void }) {
   return (
     <div className="overlay start-overlay">
-      <div className="overlay-card">
+      <div className="overlay-card menu-card">
         <p className="overlay-brand">LANES</p>
-        <h1 className="overlay-title">{recipeTitle}</h1>
+        <h1 className="overlay-title">Pick a cook</h1>
         <p className="overlay-copy">
-          Three prep streams. Each step stays open while you cook — chop, stir,
-          plate — then tap the lane when you&apos;re done.
+          Kitchens run at different tempos. Warm up on a short counter cook,
+          then take the curry — or jump straight in.
         </p>
-        <button type="button" className="cta-start" onClick={onStart}>
-          START COOK
-        </button>
+        <div className="recipe-pick">
+          {RECIPES.map((r, i) => {
+            const initiation = r.id === INITIATION_RECIPE.id;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                className={initiation ? "cta-start recipe-cta" : "cta-secondary recipe-cta"}
+                onClick={() => onPick(r)}
+              >
+                <span className="recipe-cta-title">{r.title}</span>
+                <span className="recipe-cta-meta">
+                  {initiation ? "Initiation · " : ""}
+                  {recipeBlurb(r)}
+                  <span className="recipe-cta-key">
+                    {" "}
+                    · <kbd>{i + 1}</kbd>
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
         <p className="overlay-keys">
-          Press <kbd>Space</kbd> or <kbd>Enter</kbd>
+          <kbd>1</kbd> / <kbd>Space</kbd> warm-up · <kbd>2</kbd> /{" "}
+          <kbd>Enter</kbd> curry
         </p>
       </div>
     </div>
@@ -469,10 +545,20 @@ function StartOverlay({
 
 function DoneOverlay({
   stats,
+  recipe,
+  isInitiation,
   onReplay,
+  onCookCurry,
+  onCookInitiation,
+  onMenu,
 }: {
   stats: GameStats;
+  recipe: Recipe;
+  isInitiation: boolean;
   onReplay: () => void;
+  onCookCurry: () => void;
+  onCookInitiation: () => void;
+  onMenu: () => void;
 }) {
   const grade = plateGrade(stats);
   const acc = accuracyPct(stats);
@@ -481,10 +567,20 @@ function DoneOverlay({
       <div className="overlay-card plated">
         <p className="overlay-brand">PLATED</p>
         <h2 className="overlay-title">{grade}</h2>
+        <p className="done-recipe">{recipe.title}</p>
         <div className="plate-visual" aria-hidden>
           <div className="plate-rim">
-            <div className="plate-curry" />
-            <div className="plate-rice" />
+            {isInitiation ? (
+              <>
+                <div className="plate-toast" />
+                <div className="plate-oil" />
+              </>
+            ) : (
+              <>
+                <div className="plate-curry" />
+                <div className="plate-rice" />
+              </>
+            )}
           </div>
         </div>
         <ul className="done-stats">
@@ -507,11 +603,48 @@ function DoneOverlay({
             </strong>
           </li>
         </ul>
-        <button type="button" className="cta-start" onClick={onReplay}>
-          COOK AGAIN
-        </button>
+        <div className="done-actions">
+          {isInitiation ? (
+            <>
+              <button type="button" className="cta-start" onClick={onCookCurry}>
+                COOK THE CURRY
+              </button>
+              <button
+                type="button"
+                className="cta-secondary"
+                onClick={onReplay}
+              >
+                WARM UP AGAIN
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="cta-start" onClick={onReplay}>
+                COOK AGAIN
+              </button>
+              <button
+                type="button"
+                className="cta-secondary"
+                onClick={onCookInitiation}
+              >
+                COUNTER WARM-UP
+              </button>
+            </>
+          )}
+          <button type="button" className="cta-ghost" onClick={onMenu}>
+            Pick a cook
+          </button>
+        </div>
         <p className="overlay-keys">
-          <kbd>R</kbd> or <kbd>Space</kbd> to replay
+          {isInitiation ? (
+            <>
+              <kbd>Space</kbd> curry · <kbd>R</kbd> replay · <kbd>M</kbd> menu
+            </>
+          ) : (
+            <>
+              <kbd>R</kbd> or <kbd>Space</kbd> replay · <kbd>M</kbd> menu
+            </>
+          )}
         </p>
       </div>
     </div>
