@@ -1,12 +1,13 @@
 import {
   APPROACH_SEC,
-  GOOD_WINDOW,
-  PERFECT_WINDOW,
+  LATE_FRACTION,
+  RUSHED_FRACTION,
   type ActiveNote,
   type GameStats,
   type HitJudgment,
   type LaneId,
   type Recipe,
+  type RecipeNote,
 } from "./types";
 
 export function createActiveNotes(recipe: Recipe): ActiveNote[] {
@@ -29,26 +30,55 @@ export function emptyStats(total: number): GameStats {
   };
 }
 
-export function noteProgress(noteTime: number, now: number): number {
-  // 0 = just spawned (far), 1 = at strike line
-  const start = noteTime - APPROACH_SEC;
+export function noteStart(note: RecipeNote): number {
+  return note.time;
+}
+
+export function noteEnd(note: RecipeNote): number {
+  return note.time + note.duration;
+}
+
+/** True while the step is open at the strike line and waiting for a tap. */
+export function isInWindow(note: RecipeNote, now: number): boolean {
+  return now >= note.time && now <= noteEnd(note);
+}
+
+/**
+ * Approach progress: 0 = just spawned (far), 1 = at strike line.
+ * Once in the hittable window, stays locked at 1 until hit/miss.
+ */
+export function noteProgress(note: RecipeNote, now: number): number {
+  const start = note.time - APPROACH_SEC;
   if (now <= start) return 0;
-  if (now >= noteTime) return 1 + (now - noteTime) / APPROACH_SEC;
+  if (now >= note.time) return 1;
   return (now - start) / APPROACH_SEC;
+}
+
+/** How much of the open window is still left (1 → 0 while active). */
+export function windowRemaining(note: RecipeNote, now: number): number {
+  if (now < note.time) return 1;
+  if (now >= noteEnd(note)) return 0;
+  return 1 - (now - note.time) / note.duration;
 }
 
 export function isVisible(note: ActiveNote, now: number): boolean {
   if (note.status !== "pending") return false;
   const start = note.time - APPROACH_SEC;
-  const end = note.time + GOOD_WINDOW + 0.05;
+  const end = noteEnd(note) + 0.05;
   return now >= start && now <= end;
 }
 
-export function judgeHit(delta: number): HitJudgment | null {
-  const abs = Math.abs(delta);
-  if (abs <= PERFECT_WINDOW) return "perfect";
-  if (abs <= GOOD_WINDOW) return "good";
-  return null;
+/**
+ * Judge a tap against a cook-duration window.
+ * Rushed (very early in the window) / late edge → good.
+ * Main portion (after you've had time to do the work) → perfect.
+ */
+export function judgeHit(note: RecipeNote, now: number): HitJudgment | null {
+  if (!isInWindow(note, now)) return null;
+  const progress = (now - note.time) / note.duration;
+  if (progress < RUSHED_FRACTION) return "good";
+  if (progress <= LATE_FRACTION) return "perfect";
+  return "good";
 }
 
 export function scoreFor(judgment: HitJudgment, combo: number): number {
@@ -59,7 +89,7 @@ export function scoreFor(judgment: HitJudgment, combo: number): number {
 }
 
 /**
- * Find the best pending note in a lane within the hit window.
+ * Earliest pending note in a lane that is currently hittable.
  */
 export function findHittable(
   notes: ActiveNote[],
@@ -67,38 +97,47 @@ export function findHittable(
   now: number,
 ): ActiveNote | null {
   let best: ActiveNote | null = null;
-  let bestAbs = Infinity;
 
   for (const note of notes) {
     if (note.lane !== lane || note.status !== "pending") continue;
-    const delta = now - note.time;
-    const abs = Math.abs(delta);
-    if (abs > GOOD_WINDOW) continue;
-    if (abs < bestAbs) {
-      bestAbs = abs;
-      best = note;
-    }
+    if (!isInWindow(note, now)) continue;
+    if (!best || note.time < best.time) best = note;
   }
   return best;
 }
 
 /**
- * Space / global hit: nearest pending note across all lanes in window.
+ * Space / global hit: earliest open step across all lanes.
  */
 export function findNearestHittable(
   notes: ActiveNote[],
   now: number,
 ): ActiveNote | null {
   let best: ActiveNote | null = null;
-  let bestAbs = Infinity;
 
   for (const note of notes) {
     if (note.status !== "pending") continue;
-    const abs = Math.abs(now - note.time);
-    if (abs > GOOD_WINDOW) continue;
-    if (abs < bestAbs) {
-      bestAbs = abs;
-      best = note;
+    if (!isInWindow(note, now)) continue;
+    if (!best || note.time < best.time) best = note;
+  }
+  return best;
+}
+
+/**
+ * Soft early: pending note in lane is approaching but not open yet.
+ */
+export function findApproaching(
+  notes: ActiveNote[],
+  lane: LaneId,
+  now: number,
+): ActiveNote | null {
+  let best: ActiveNote | null = null;
+
+  for (const note of notes) {
+    if (note.lane !== lane || note.status !== "pending") continue;
+    const approachStart = note.time - APPROACH_SEC;
+    if (now >= approachStart && now < note.time) {
+      if (!best || note.time < best.time) best = note;
     }
   }
   return best;
@@ -111,7 +150,7 @@ export function applyMisses(notes: ActiveNote[], now: number): {
   const newlyMissed: ActiveNote[] = [];
   const next = notes.map((n) => {
     if (n.status !== "pending") return n;
-    if (now - n.time > GOOD_WINDOW) {
+    if (now > noteEnd(n)) {
       const missed = { ...n, status: "missed" as const, judgment: "miss" as const };
       newlyMissed.push(missed);
       return missed;
@@ -164,9 +203,18 @@ export function accuracyPct(stats: GameStats): number {
 
 export function plateGrade(stats: GameStats): string {
   const acc = accuracyPct(stats);
-  if (acc >= 95 && stats.maxCombo >= 8) return "Fire";
+  if (acc >= 95 && stats.maxCombo >= 6) return "Fire";
   if (acc >= 85) return "Hot";
   if (acc >= 70) return "Solid";
   if (acc >= 50) return "Edible";
   return "Needs salt";
+}
+
+/** Last moment any pending note can still be completed. */
+export function recipeEndTime(recipe: Recipe): number {
+  let end = recipe.durationSec;
+  for (const n of recipe.notes) {
+    end = Math.max(end, noteEnd(n));
+  }
+  return end;
 }

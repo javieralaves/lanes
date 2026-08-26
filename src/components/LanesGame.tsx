@@ -22,12 +22,16 @@ import {
   applyMissStats,
   createActiveNotes,
   emptyStats,
+  findApproaching,
   findHittable,
   findNearestHittable,
+  isInWindow,
   isVisible,
   judgeHit,
   noteProgress,
   plateGrade,
+  recipeEndTime,
+  windowRemaining,
 } from "@/lib/game";
 import { DEMO_RECIPE } from "@/lib/recipe";
 import {
@@ -46,6 +50,16 @@ function formatTime(sec: number): string {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}:${r.toString().padStart(2, "0")}`;
+}
+
+function formatWindow(sec: number): string {
+  const s = Math.max(0, Math.ceil(sec));
+  if (s >= 60) {
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return r === 0 ? `${m}m` : `${m}m ${r}s`;
+  }
+  return `${s}s`;
 }
 
 export default function LanesGame() {
@@ -100,7 +114,10 @@ export default function LanesGame() {
   const pushFlash = useCallback(
     (lane: LaneId, judgment: HitJudgment, label: string) => {
       const id = `${lane}-${performance.now()}`;
-      setFlashes((f) => [...f.slice(-6), { id, lane, judgment, label, at: performance.now() }]);
+      setFlashes((f) => [
+        ...f.slice(-6),
+        { id, lane, judgment, label, at: performance.now() },
+      ]);
       window.setTimeout(() => {
         setFlashes((f) => f.filter((x) => x.id !== id));
       }, 500);
@@ -118,15 +135,20 @@ export default function LanesGame() {
           : findHittable(notesRef.current, lane, t);
 
       if (!target) {
-        // Pressed with nothing in window — soft early flash on that lane
         if (lane !== "any") {
+          const approaching = findApproaching(notesRef.current, lane, t);
+          if (approaching) {
+            playMiss();
+            showJudgment("early");
+            pushFlash(lane, "early", approaching.label);
+          }
           setPressLane(lane);
           window.setTimeout(() => setPressLane(null), 120);
         }
         return;
       }
 
-      const judgment = judgeHit(t - target.time);
+      const judgment = judgeHit(target, t);
       if (!judgment) return;
 
       const nextNotes = applyHit(notesRef.current, target.id, judgment);
@@ -152,8 +174,7 @@ export default function LanesGame() {
       return;
     }
 
-    const durationSec = recipe.durationSec;
-    const lastNoteTime = recipe.notes[recipe.notes.length - 1]?.time ?? 0;
+    const endAt = recipeEndTime(recipe);
 
     const frame = () => {
       if (phaseRef.current !== "playing") return;
@@ -174,14 +195,8 @@ export default function LanesGame() {
         }
       }
 
-      if (t >= durationSec + 0.6) {
-        setPhase("done");
-        playDone();
-        return;
-      }
-
       const allDone = notesRef.current.every((n) => n.status !== "pending");
-      if (allDone && t > lastNoteTime + 0.8) {
+      if (allDone || t >= endAt + 0.8) {
         setPhase("done");
         playDone();
         return;
@@ -192,7 +207,7 @@ export default function LanesGame() {
 
     rafRef.current = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [phase, recipe.durationSec, recipe.notes, pushFlash, showJudgment]);
+  }, [phase, recipe, pushFlash, showJudgment]);
 
   const startGame = useCallback(() => {
     const fresh = createActiveNotes(recipe);
@@ -219,7 +234,10 @@ export default function LanesGame() {
         startGame();
         return;
       }
-      if (phaseRef.current === "done" && (key === " " || key === "enter" || key === "r")) {
+      if (
+        phaseRef.current === "done" &&
+        (key === " " || key === "enter" || key === "r")
+      ) {
         e.preventDefault();
         startGame();
         return;
@@ -338,24 +356,43 @@ export default function LanesGame() {
                         {visibleNotes
                           .filter((n) => n.lane === lane)
                           .map((n) => {
-                            const p = noteProgress(n.time, now);
+                            const active = isInWindow(n, now);
+                            const p = noteProgress(n, now);
+                            const rem = windowRemaining(n, now);
                             // Map progress to perspective: far (top) → strike (bottom)
-                            const y = Math.min(1.15, Math.max(0, p));
-                            const scale = 0.45 + y * 0.55;
-                            const opacity =
-                              p < 0 ? 0 : p > 1.05 ? Math.max(0, 1.3 - p) : 1;
+                            const y = active ? 1 : Math.min(1, Math.max(0, p));
+                            const scale = active ? 1 : 0.45 + y * 0.55;
                             return (
                               <div
                                 key={n.id}
-                                className="note"
+                                className={`note ${active ? "note-active" : "note-approach"}`}
                                 style={{
                                   ["--y" as string]: String(y),
                                   ["--scale" as string]: String(scale),
-                                  opacity,
+                                  ["--remain" as string]: String(rem),
                                 }}
                               >
+                                {active && (
+                                  <div
+                                    className="note-window"
+                                    aria-hidden
+                                  >
+                                    <div
+                                      className="note-window-fill"
+                                      style={{
+                                        transform: `scaleY(${rem})`,
+                                      }}
+                                    />
+                                  </div>
+                                )}
                                 <span className="note-gem" />
                                 <span className="note-label">{n.label}</span>
+                                {active && (
+                                  <span className="note-timer">
+                                    {formatWindow(n.duration * rem)} left · tap
+                                    when done
+                                  </span>
+                                )}
                               </div>
                             );
                           })}
@@ -384,10 +421,12 @@ export default function LanesGame() {
 
           <footer className="cabinet-controls">
             <p>
-              Hit notes at the line · <kbd>A</kbd> Board · <kbd>S</kbd> Pot ·{" "}
-              <kbd>D</kbd> Finish · <kbd>Space</kbd> nearest
+              Do the step, then tap · <kbd>A</kbd> Board · <kbd>S</kbd> Pot ·{" "}
+              <kbd>D</kbd> Finish · <kbd>Space</kbd> open step
             </p>
-            <p className="controls-hint">Tap a lane on tablet · landscape works best</p>
+            <p className="controls-hint">
+              Windows wait for real cook time · landscape works best
+            </p>
           </footer>
         </div>
       </div>
@@ -414,8 +453,8 @@ function StartOverlay({
         <p className="overlay-brand">LANES</p>
         <h1 className="overlay-title">{recipeTitle}</h1>
         <p className="overlay-copy">
-          Three prep streams. Notes are cook steps. Hit them as they reach the
-          strike line — keyboard, tap, or space.
+          Three prep streams. Each step stays open while you cook — chop, stir,
+          plate — then tap the lane when you&apos;re done.
         </p>
         <button type="button" className="cta-start" onClick={onStart}>
           START COOK

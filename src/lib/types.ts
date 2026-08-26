@@ -7,8 +7,13 @@ export type HitJudgment = "perfect" | "good" | "miss" | "early";
 export interface RecipeNote {
   id: string;
   lane: LaneId;
-  /** Seconds from recipe start when the note should be hit */
+  /** Seconds from recipe start when the step becomes hittable */
   time: number;
+  /**
+   * How long the step stays open (seconds) — roughly the real cook time
+   * for that verb. Tap when you're done, not on a beat.
+   */
+  duration: number;
   label: string;
 }
 
@@ -74,8 +79,13 @@ export const LANE_META: Record<
 };
 
 /** How long a note travels before the strike line (seconds) */
-export const APPROACH_SEC = 2.4;
+export const APPROACH_SEC = 2.8;
 
-/** Hit windows relative to perfect time (seconds) — generous for countertop demo */
-export const PERFECT_WINDOW = 0.16;
-export const GOOD_WINDOW = 0.32;
+/**
+ * Fraction of the step window that counts as "rushed" (Good, not Perfect).
+ * After this, tapping when done is Perfect until the window closes.
+ */
+export const RUSHED_FRACTION = 0.12;
+
+/** Late edge of the window still counts as Good (cutting it close). */
+export const LATE_FRACTION = 0.92;
