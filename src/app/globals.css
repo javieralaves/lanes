@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Arcade cabinet */
   --cabinet-outer: #12101a;
   --cabinet-mid: #1a1624;
   --cabinet-inner: #07060c;
@@ -15,6 +16,18 @@
   --bezel: #2a2438;
   --font-display: var(--font-display), "Arial Black", sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  /* Poster / wheatpaste landing */
+  --ink: #12100e;
+  --ink-soft: #2a2620;
+  --paper: #f2ead8;
+  --paper-deep: #e4d7bc;
+  --chili: #d6281a;
+  --chili-deep: #9e1a10;
+  --mustard: #e8b82e;
+  --wall: #2c2924;
+  --wall-deep: #1a1814;
+  --paste: rgba(242, 234, 216, 0.92);
 }
 
 * {
@@ -30,18 +43,19 @@ body {
 body {
   min-height: 100%;
   min-height: 100dvh;
-  color: var(--text);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, #2a1f3d 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, #1a2a22 0%, transparent 45%),
-    linear-gradient(165deg, #0c0a12 0%, #15101c 40%, #0a1210 100%);
-  font-family: var(--font-mono);
+  color: var(--ink);
+  background: var(--wall-deep);
+  font-family: var(--font-poster-body), "Helvetica Neue", sans-serif;
   overflow-x: hidden;
 }
 
 button {
   font: inherit;
   cursor: pointer;
+}
+
+a {
+  color: inherit;
 }
 
 kbd {
@@ -53,6 +67,566 @@ kbd {
   background: rgba(255, 255, 255, 0.08);
   font-size: 0.85em;
   font-family: var(--font-mono);
+}
+
+/* ——— Poster landing ——— */
+
+.poster-page {
+  position: relative;
+  min-height: 100dvh;
+  color: var(--ink);
+  background: var(--wall-deep);
+}
+
+.poster-wall {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 55% at 15% 10%, #3a342c 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 80%, #241f18 0%, transparent 50%),
+    repeating-linear-gradient(
+      92deg,
+      transparent 0 38px,
+      rgba(0, 0, 0, 0.07) 38px 39px
+    ),
+    linear-gradient(165deg, #2f2b25 0%, #1c1a16 45%, #141210 100%);
+}
+
+.poster-wall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.25) 0 1px, transparent 2px),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.04) 0 1px, transparent 2px);
+  background-size: 7px 9px, 11px 13px;
+  pointer-events: none;
+}
+
+.poster-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.poster-hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding:
+    clamp(1rem, 3vw, 2rem)
+    clamp(0.75rem, 3vw, 2rem)
+    clamp(1.5rem, 4vw, 2.5rem);
+  animation: poster-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-bill {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding:
+    clamp(1.5rem, 4vw, 3rem)
+    clamp(1.25rem, 4.5vw, 3.25rem)
+    clamp(1.75rem, 4vw, 2.75rem);
+  background:
+    linear-gradient(165deg, #f6efdf 0%, var(--paper) 42%, var(--paper-deep) 100%);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transform: rotate(-0.7deg);
+  overflow: hidden;
+  animation: brand-slam 0.85s cubic-bezier(0.15, 0.9, 0.25, 1) both;
+}
+
+.hero-bill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    radial-gradient(ellipse 80% 50% at 80% 0%, rgba(214, 40, 26, 0.12), transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 47px,
+      rgba(18, 16, 14, 0.04) 47px 48px
+    );
+}
+
+.hero-bill::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  bottom: -18%;
+  width: 55%;
+  height: 55%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 40% 40%, transparent 42%, rgba(18, 16, 14, 0.05) 43% 48%, transparent 49%),
+    conic-gradient(
+      from 200deg at 50% 50%,
+      transparent 0 18%,
+      rgba(214, 40, 26, 0.08) 18% 22%,
+      transparent 22% 40%,
+      rgba(232, 184, 46, 0.1) 40% 44%,
+      transparent 44% 100%
+    );
+  mix-blend-mode: multiply;
+}
+
+.hero-bill-tape {
+  position: absolute;
+  top: -8px;
+  width: 88px;
+  height: 22px;
+  z-index: 2;
+  background: color-mix(in srgb, var(--mustard) 50%, rgba(255, 255, 255, 0.35));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.hero-bill-tape-l {
+  left: 10%;
+  transform: rotate(-6deg);
+}
+
+.hero-bill-tape-r {
+  right: 12%;
+  transform: rotate(7deg);
+  background: color-mix(in srgb, var(--paper) 35%, rgba(255, 255, 255, 0.4));
+}
+
+.poster-stamp {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0.75rem;
+  width: fit-content;
+  padding: 0.28rem 0.55rem;
+  border: 2px solid var(--chili);
+  color: var(--chili);
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+  background: color-mix(in srgb, var(--mustard) 18%, var(--paper));
+  animation: stamp-in 0.7s 0.15s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.poster-brand {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  line-height: 0.82;
+}
+
+.poster-brand-word {
+  display: block;
+  font-family: var(--font-poster-brand), Impact, sans-serif;
+  font-size: clamp(4.8rem, 20vw, 11.5rem);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-shadow: 4px 5px 0 color-mix(in srgb, var(--chili) 55%, transparent);
+}
+
+.poster-headline {
+  position: relative;
+  z-index: 1;
+  margin: clamp(0.85rem, 2.5vw, 1.4rem) 0 0;
+  max-width: 16ch;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.65rem, 5vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--chili-deep);
+  text-wrap: balance;
+}
+
+.poster-lede {
+  position: relative;
+  z-index: 1;
+  margin: 0.85rem 0 0;
+  max-width: 34ch;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  line-height: 1.45;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.poster-cta-row {
+  position: relative;
+  z-index: 1;
+  margin-top: clamp(1.4rem, 3.5vw, 2.2rem);
+}
+
+.poster-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 1.55rem 0.85rem;
+  background: var(--chili);
+  color: var(--paper);
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 3px solid var(--ink);
+  box-shadow:
+    4px 4px 0 var(--ink),
+    0 0 0 1px color-mix(in srgb, var(--mustard) 35%, transparent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+  animation: cta-ink 2.4s ease-in-out infinite;
+}
+
+.poster-cta:hover {
+  background: var(--chili-deep);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.poster-cta:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+  animation: none;
+}
+
+.poster-stack {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  padding:
+    0 clamp(1.1rem, 5vw, 3.5rem) clamp(3rem, 8vw, 5rem);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.flyer {
+  position: relative;
+  padding: clamp(1.35rem, 3.5vw, 2.1rem) clamp(1.2rem, 3vw, 1.85rem);
+  background:
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  animation: flyer-paste 0.75s cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+.flyer-problem {
+  transform: rotate(-1.1deg);
+  animation-delay: 0.05s;
+}
+
+.flyer-who {
+  transform: rotate(1.35deg);
+  margin-left: clamp(0rem, 4vw, 2.5rem);
+  animation-delay: 0.12s;
+}
+
+.flyer-how {
+  transform: rotate(-0.6deg);
+  animation-delay: 0.18s;
+}
+
+.flyer-proof {
+  transform: rotate(0.9deg);
+  margin-right: clamp(0rem, 3vw, 1.75rem);
+  animation-delay: 0.24s;
+}
+
+.flyer-end {
+  transform: rotate(-0.4deg);
+  background:
+    linear-gradient(160deg, #1f1b17 0%, #12100e 100%);
+  color: var(--paper);
+  border-color: color-mix(in srgb, var(--mustard) 40%, transparent);
+  animation-delay: 0.3s;
+}
+
+.flyer-end .flyer-kicker {
+  color: var(--mustard);
+}
+
+.flyer-end .flyer-body {
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+.flyer-tape {
+  position: absolute;
+  top: -10px;
+  left: 18%;
+  width: 72px;
+  height: 18px;
+  background: color-mix(in srgb, var(--mustard) 55%, transparent);
+  transform: rotate(-4deg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.flyer-tape-skew {
+  left: auto;
+  right: 16%;
+  transform: rotate(8deg);
+  background: color-mix(in srgb, var(--paper) 40%, rgba(255, 255, 255, 0.35));
+}
+
+.flyer-staple {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 14px;
+  height: 6px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #c8c2b4, #8a8478);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.flyer-kicker {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--chili);
+}
+
+.flyer-title {
+  margin: 0;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.65rem, 4.2vw, 2.45rem);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+
+.flyer-body {
+  margin: 0.85rem 0 0;
+  max-width: 42ch;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.flyer-steps {
+  margin: 1.15rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.85rem;
+  counter-reset: lane-step;
+}
+
+.flyer-steps li {
+  position: relative;
+  padding-left: 2.6rem;
+  counter-increment: lane-step;
+}
+
+.flyer-steps li::before {
+  content: counter(lane-step);
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 1.85rem;
+  height: 1.85rem;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--paper);
+  background: var(--ink);
+  border: 2px solid var(--chili);
+}
+
+.flyer-steps strong {
+  display: block;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.15rem;
+}
+
+.flyer-steps span {
+  display: block;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  font-size: 0.98rem;
+}
+
+.flyer-notes {
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.flyer-notes li {
+  padding: 0.35rem 0.55rem 0.28rem;
+  border: 2px solid var(--ink);
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--mustard) 22%, var(--paper));
+}
+
+.poster-cta-end {
+  margin-top: 1.35rem;
+}
+
+.poster-foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+  padding: 0 clamp(1.1rem, 5vw, 3.5rem) clamp(2rem, 5vw, 3rem);
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+.poster-foot-brand {
+  font-family: var(--font-poster-brand), Impact, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+}
+
+.poster-foot-sep {
+  opacity: 0.5;
+}
+
+@keyframes poster-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.08) translateY(12px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-2deg) scale(1);
+  }
+}
+
+@keyframes flyer-paste {
+  from {
+    opacity: 0;
+    filter: brightness(0.8);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes cta-ink {
+  0%,
+  100% {
+    box-shadow:
+      4px 4px 0 var(--ink),
+      0 0 0 1px color-mix(in srgb, var(--mustard) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      4px 4px 0 var(--ink),
+      0 0 0 3px color-mix(in srgb, var(--mustard) 55%, transparent);
+  }
+}
+
+@media (max-width: 640px) {
+  .poster-hero {
+    justify-content: stretch;
+    padding-bottom: 1.25rem;
+  }
+
+  .hero-bill {
+    transform: none;
+    min-height: calc(100dvh - 2.5rem);
+  }
+
+  .flyer-who,
+  .flyer-proof {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .flyer-problem,
+  .flyer-who,
+  .flyer-how,
+  .flyer-proof,
+  .flyer-end {
+    transform: none;
+  }
+}
+
+/* ——— Arcade page shell ——— */
+
+.arcade-page {
+  min-height: 100dvh;
+  color: var(--text);
+  font-family: var(--font-mono);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #2a1f3d 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, #1a2a22 0%, transparent 45%),
+    linear-gradient(165deg, #0c0a12 0%, #15101c 40%, #0a1210 100%);
 }
 
 /* ——— Cabinet shell ——— */
@@ -757,7 +1331,7 @@ kbd {
   opacity: 0.75;
 }
 
-/* ——— Motion ——— */
+/* ——— Arcade motion ——— */
 
 @keyframes marquee-pulse {
   0%,
@@ -849,7 +1423,7 @@ kbd {
   }
 }
 
-/* ——— Responsive ——— */
+/* ——— Arcade responsive ——— */
 
 @media (max-width: 700px), (max-height: 560px) {
   .cabinet-shell {

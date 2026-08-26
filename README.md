@@ -1,15 +1,20 @@
 # Lanes
 
-Arcade cook demo: run a recipe through timed Guitar Hero–style lanes — but at cook pace.
+Cook along a recipe like a song — timed prep lanes for home cooks, at cook pace.
 
-## Play
+## Sites
+
+- `/` — marketing landing (wheatpaste poster)
+- `/play` — arcade cook demo (Board · Pot · Finish)
+
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `/` — hit **Start Cook**, then do each step in real life and tap Board / Pot / Finish when you're done.
+Open `/` for the landing, or `/play` to **Start Cook** — do each step in real life and tap Board / Pot / Finish when you're done.
 
 - Keys: `A` Board · `S` Pot · `D` Finish · `Space` open step
 - Tap lanes on tablet (landscape works best)

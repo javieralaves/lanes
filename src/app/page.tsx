@@ -1,5 +1,5 @@
-import LanesGame from "@/components/LanesGame";
+import LandingPage from "@/components/LandingPage";
 
 export default function Home() {
-  return <LanesGame />;
+  return <LandingPage />;
 }

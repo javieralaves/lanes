@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, IBM_Plex_Mono } from "next/font/google";
+import {
+  Archivo_Black,
+  Barlow_Condensed,
+  Chakra_Petch,
+  DM_Sans,
+  IBM_Plex_Mono,
+} from "next/font/google";
 import "./globals.css";
 
 const display = Chakra_Petch({
@@ -14,16 +20,37 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 });
 
+const posterBrand = Archivo_Black({
+  variable: "--font-poster-brand",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const posterCondensed = Barlow_Condensed({
+  variable: "--font-poster-condensed",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
+const posterBody = DM_Sans({
+  variable: "--font-poster-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "Lanes — Arcade Cook",
+  title: {
+    default: "Lanes — Cook along a recipe like a song",
+    template: "%s · Lanes",
+  },
   description:
-    "Guitar Hero–style cooking demo. Run a weeknight lentil curry through timed Board, Pot, and Finish lanes.",
+    "Lanes turns recipes into timed prep lanes. Hit each cook step when it arrives. Play the weeknight lentil curry demo.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0c0a12",
+  themeColor: "#1a1814",
 };
 
 export default function RootLayout({
@@ -32,7 +59,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${mono.variable} ${posterBrand.variable} ${posterCondensed.variable} ${posterBody.variable} h-full`}
+    >
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );
