@@ -203,7 +203,8 @@ export function accuracyPct(stats: GameStats): number {
 
 export function plateGrade(stats: GameStats): string {
   const acc = accuracyPct(stats);
-  if (acc >= 95 && stats.maxCombo >= 6) return "Fire";
+  const comboBar = Math.max(3, Math.ceil(stats.total * 0.6));
+  if (acc >= 95 && stats.maxCombo >= comboBar) return "Fire";
   if (acc >= 85) return "Hot";
   if (acc >= 70) return "Solid";
   if (acc >= 50) return "Edible";

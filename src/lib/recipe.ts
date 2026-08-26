@@ -1,6 +1,56 @@
 import type { Recipe } from "./types";
 
 /**
+ * Counter warm-up — initiation cook for tempo + three lanes.
+ *
+ * A real weeknight micro-cook (garlic oil on toast). Short windows, clear
+ * handoffs Board → Pot → Finish. Faster and simpler than the lentil curry;
+ * meant to set kitchen tempo before a longer recipe.
+ */
+export const GARLIC_OIL_TOAST: Recipe = {
+  id: "garlic-oil-toast",
+  title: "Garlic Oil Toast",
+  subtitle: "Initiation · set your kitchen tempo",
+  durationSec: 150,
+  notes: [
+    // Board — knife work, then the pot takes over
+    {
+      id: "g1",
+      lane: "board",
+      time: 6,
+      duration: 28,
+      label: "Smash & peel garlic",
+    },
+    {
+      id: "g2",
+      lane: "board",
+      time: 38,
+      duration: 32,
+      label: "Rough chop garlic",
+    },
+
+    // Pot — heat, then soft cook (not a long simmer)
+    { id: "g3", lane: "pot", time: 28, duration: 25, label: "Warm oil in pan" },
+    {
+      id: "g4",
+      lane: "pot",
+      time: 72,
+      duration: 40,
+      label: "Soften garlic in oil",
+    },
+
+    // Finish — plate at counter pace
+    {
+      id: "g5",
+      lane: "finish",
+      time: 115,
+      duration: 35,
+      label: "Spoon oil over toast",
+    },
+  ],
+};
+
+/**
  * Weeknight lentil curry — cook-paced chart.
  *
  * Each note's `duration` is about how long that real step takes. The window
@@ -54,4 +104,11 @@ export const LENTIL_CURRY: Recipe = {
   ],
 };
 
+export const RECIPES: Recipe[] = [GARLIC_OIL_TOAST, LENTIL_CURRY];
+
+export const INITIATION_RECIPE = GARLIC_OIL_TOAST;
 export const DEMO_RECIPE = LENTIL_CURRY;
+
+export function getRecipe(id: string): Recipe | undefined {
+  return RECIPES.find((r) => r.id === id);
+}
