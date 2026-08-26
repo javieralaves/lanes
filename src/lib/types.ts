@@ -76,6 +76,6 @@ export const LANE_META: Record<
 /** How long a note travels before the strike line (seconds) */
 export const APPROACH_SEC = 2.4;
 
-/** Hit windows relative to perfect time (seconds) */
-export const PERFECT_WINDOW = 0.11;
-export const GOOD_WINDOW = 0.22;
+/** Hit windows relative to perfect time (seconds) — generous for countertop demo */
+export const PERFECT_WINDOW = 0.16;
+export const GOOD_WINDOW = 0.32;
