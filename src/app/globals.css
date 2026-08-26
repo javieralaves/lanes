@@ -389,6 +389,39 @@ kbd {
   z-index: 3;
 }
 
+.note-active {
+  top: 78%;
+  z-index: 6;
+  animation: note-pulse 1.6s ease-in-out infinite;
+}
+
+.note-window {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(10px, 2.4vw, 14px);
+  height: clamp(48px, 14vh, 110px);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid color-mix(in srgb, var(--lane-accent) 55%, transparent);
+  overflow: hidden;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--lane-glow) 35%, transparent);
+}
+
+.note-window-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: bottom center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--lane-accent) 75%, white),
+    var(--lane-accent)
+  );
+  opacity: 0.9;
+  will-change: transform;
+}
+
 .note-gem {
   width: clamp(36px, 8vw, 52px);
   height: clamp(22px, 4.5vw, 30px);
@@ -405,6 +438,14 @@ kbd {
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
+.note-active .note-gem {
+  box-shadow:
+    0 0 22px var(--lane-glow),
+    0 0 40px color-mix(in srgb, var(--lane-glow) 50%, transparent),
+    0 4px 0 color-mix(in srgb, var(--lane-accent) 55%, black),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
 .note-label {
   max-width: 100%;
   padding: 0.15rem 0.4rem;
@@ -418,6 +459,31 @@ kbd {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.note-timer {
+  max-width: 100%;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--lane-accent) 18%, rgba(8, 6, 14, 0.9));
+  border: 1px solid color-mix(in srgb, var(--lane-accent) 50%, transparent);
+  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--lane-accent) 70%, var(--text));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes note-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
 }
 
 .strike-line {
@@ -469,6 +535,10 @@ kbd {
 
 .hit-miss {
   background: radial-gradient(circle, rgba(255, 92, 122, 0.4), transparent 70%);
+}
+
+.hit-early {
+  background: radial-gradient(circle, rgba(255, 179, 71, 0.35), transparent 70%);
 }
 
 .lane-pad {
