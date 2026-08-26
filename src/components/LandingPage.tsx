@@ -7,19 +7,23 @@ export default function LandingPage() {
       <div className="poster-wall" aria-hidden />
 
       <header className="poster-hero">
-        <p className="poster-stamp">Kitchen arcade · Street paste</p>
-        <h1 className="poster-brand">
-          <span className="poster-brand-word">LANES</span>
-        </h1>
-        <p className="poster-headline">Cook along a recipe like a song.</p>
-        <p className="poster-lede">
-          Timed prep streams. Hit each step when it arrives. Dinner stops
-          feeling like a document.
-        </p>
-        <div className="poster-cta-row">
-          <Link href="/play" className="poster-cta">
-            Play the demo
-          </Link>
+        <div className="hero-bill">
+          <span className="hero-bill-tape hero-bill-tape-l" aria-hidden />
+          <span className="hero-bill-tape hero-bill-tape-r" aria-hidden />
+          <p className="poster-stamp">Kitchen arcade · Street paste</p>
+          <h1 className="poster-brand">
+            <span className="poster-brand-word">LANES</span>
+          </h1>
+          <p className="poster-headline">Cook along a recipe like a song.</p>
+          <p className="poster-lede">
+            Timed prep streams. Hit each step when it arrives. Dinner stops
+            feeling like a document.
+          </p>
+          <div className="poster-cta-row">
+            <Link href="/play" className="poster-cta">
+              Play the demo
+            </Link>
+          </div>
         </div>
       </header>
 

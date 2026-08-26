@@ -120,17 +120,99 @@ kbd {
   position: relative;
   min-height: 100dvh;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  align-items: stretch;
+  justify-content: center;
   padding:
-    clamp(1.25rem, 4vw, 2.5rem)
-    clamp(1.1rem, 5vw, 3.5rem)
-    clamp(2rem, 6vw, 4rem);
-  max-width: 1100px;
+    clamp(1rem, 3vw, 2rem)
+    clamp(0.75rem, 3vw, 2rem)
+    clamp(1.5rem, 4vw, 2.5rem);
   animation: poster-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+.hero-bill {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding:
+    clamp(1.5rem, 4vw, 3rem)
+    clamp(1.25rem, 4.5vw, 3.25rem)
+    clamp(1.75rem, 4vw, 2.75rem);
+  background:
+    linear-gradient(165deg, #f6efdf 0%, var(--paper) 42%, var(--paper-deep) 100%);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transform: rotate(-0.7deg);
+  overflow: hidden;
+  animation: brand-slam 0.85s cubic-bezier(0.15, 0.9, 0.25, 1) both;
+}
+
+.hero-bill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    radial-gradient(ellipse 80% 50% at 80% 0%, rgba(214, 40, 26, 0.12), transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 47px,
+      rgba(18, 16, 14, 0.04) 47px 48px
+    );
+}
+
+.hero-bill::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  bottom: -18%;
+  width: 55%;
+  height: 55%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 40% 40%, transparent 42%, rgba(18, 16, 14, 0.05) 43% 48%, transparent 49%),
+    conic-gradient(
+      from 200deg at 50% 50%,
+      transparent 0 18%,
+      rgba(214, 40, 26, 0.08) 18% 22%,
+      transparent 22% 40%,
+      rgba(232, 184, 46, 0.1) 40% 44%,
+      transparent 44% 100%
+    );
+  mix-blend-mode: multiply;
+}
+
+.hero-bill-tape {
+  position: absolute;
+  top: -8px;
+  width: 88px;
+  height: 22px;
+  z-index: 2;
+  background: color-mix(in srgb, var(--mustard) 50%, rgba(255, 255, 255, 0.35));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.hero-bill-tape-l {
+  left: 10%;
+  transform: rotate(-6deg);
+}
+
+.hero-bill-tape-r {
+  right: 12%;
+  transform: rotate(7deg);
+  background: color-mix(in srgb, var(--paper) 35%, rgba(255, 255, 255, 0.4));
+}
+
 .poster-stamp {
+  position: relative;
+  z-index: 1;
   margin: 0 0 0.75rem;
   width: fit-content;
   padding: 0.28rem 0.55rem;
@@ -142,11 +224,13 @@ kbd {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transform: rotate(-2deg);
-  background: color-mix(in srgb, var(--paper) 18%, transparent);
+  background: color-mix(in srgb, var(--mustard) 18%, var(--paper));
   animation: stamp-in 0.7s 0.15s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
 .poster-brand {
+  position: relative;
+  z-index: 1;
   margin: 0;
   line-height: 0.82;
 }
@@ -154,37 +238,40 @@ kbd {
 .poster-brand-word {
   display: block;
   font-family: var(--font-poster-brand), Impact, sans-serif;
-  font-size: clamp(4.6rem, 22vw, 12.5rem);
+  font-size: clamp(4.8rem, 20vw, 11.5rem);
   letter-spacing: -0.03em;
-  color: var(--paper);
-  text-shadow:
-    3px 4px 0 rgba(0, 0, 0, 0.55),
-    -1px -1px 0 rgba(232, 184, 46, 0.25);
-  animation: brand-slam 0.85s cubic-bezier(0.15, 0.9, 0.25, 1) both;
+  color: var(--ink);
+  text-shadow: 4px 5px 0 color-mix(in srgb, var(--chili) 55%, transparent);
 }
 
 .poster-headline {
+  position: relative;
+  z-index: 1;
   margin: clamp(0.85rem, 2.5vw, 1.4rem) 0 0;
   max-width: 16ch;
   font-family: var(--font-poster-condensed), "Arial Narrow", sans-serif;
   font-weight: 700;
-  font-size: clamp(1.65rem, 5.2vw, 3.1rem);
+  font-size: clamp(1.65rem, 5vw, 2.9rem);
   line-height: 1.05;
   letter-spacing: 0.01em;
-  color: var(--mustard);
+  color: var(--chili-deep);
   text-wrap: balance;
 }
 
 .poster-lede {
+  position: relative;
+  z-index: 1;
   margin: 0.85rem 0 0;
   max-width: 34ch;
   font-size: clamp(1rem, 2.2vw, 1.2rem);
   line-height: 1.45;
-  color: color-mix(in srgb, var(--paper) 82%, transparent);
+  color: var(--ink-soft);
   font-weight: 500;
 }
 
 .poster-cta-row {
+  position: relative;
+  z-index: 1;
   margin-top: clamp(1.4rem, 3.5vw, 2.2rem);
 }
 
@@ -502,8 +589,13 @@ kbd {
 
 @media (max-width: 640px) {
   .poster-hero {
-    justify-content: flex-end;
-    padding-bottom: 2.25rem;
+    justify-content: stretch;
+    padding-bottom: 1.25rem;
+  }
+
+  .hero-bill {
+    transform: none;
+    min-height: calc(100dvh - 2.5rem);
   }
 
   .flyer-who,
